@@ -456,7 +456,14 @@
 
             if (name && kelas) {
                 // AMBIL SOAL SPESIFIK BERDASARKAN KELAS
-                const storedPdf = localStorage.getItem('examPdf_' + kelas);
+            const PDF_LINKS = {
+                "X": "https://raw.githubusercontent.com/nellanurfarida-debug/asas-online/main/pdf/SOSIOLOGI%20X%20FIX.pdf",
+                "XI": null,
+                "XII_IBB": null,
+                "XII_IIS": null
+             };
+
+            const storedPdf = PDF_LINKS[kelas];
                 const storedDuration = localStorage.getItem('examDuration');
 
                 if (!storedPdf) {
@@ -643,4 +650,5 @@
         }
     </script>
 </body>
+
 </html>
