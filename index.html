@@ -1,656 +1,353 @@
+<!-- Versi final: Aplikasi Ujian Online (Admin realtime optional via Firebase) -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Ujian Online - SMADA</title>
-    <style>
-        /* --- CSS Variables untuk Tema Hijau & Putih --- */
-        :root {
-            --primary-color: #16a34a; /* Green 600 */
-            --primary-dark: #15803d;  /* Green 700 */
-            --bg-color: #f0fdf4;      /* Green 50 */
-            --text-color: #1f2937;    /* Gray 800 */
-            --white: #ffffff;
-            --danger: #dc2626;
-            --gray-light: #e5e7eb;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            user-select: none; /* Mencegah seleksi teks sederhana */
-        }
-
-        /* --- Layout & Containers --- */
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .card {
-            background: var(--white);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-        }
-
-        /* Card khusus Admin panel yang lebih lebar */
-        .card.admin-card {
-            max-width: 800px;
-        }
-
-        .full-screen-card {
-            width: 100%;
-            height: 90vh;
-            display: flex;
-            flex-direction: column;
-            max-width: none;
-        }
-
-        /* --- Typography & Elements --- */
-        h1, h2 {
-            color: var(--primary-color);
-            margin-bottom: 1.5rem;
-        }
-
-        h3 {
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-            text-align: left;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        input, select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: var(--primary-color);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: var(--primary-dark);
-        }
-
-        button.secondary {
-            background-color: transparent;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-        }
-
-        button.secondary:hover {
-            background-color: #edf7ed; /* Light green tint */
-        }
-
-        .link-btn {
-            background: none;
-            color: var(--primary-color);
-            text-decoration: underline;
-            cursor: pointer;
-            margin-top: 15px;
-            display: inline-block;
-            font-size: 0.9rem;
-        }
-
-        /* --- View Management (Router) --- */
-        .view {
-            display: none; /* Default hidden */
-            width: 100%;
-            justify-content: center;
-        }
-
-        .view.active {
-            display: flex;
-        }
-
-        /* --- Exam Specific Styles --- */
-        .exam-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 1rem;
-        }
-
-        .timer-box {
-            background-color: var(--danger);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .student-info {
-            text-align: left;
-            font-size: 0.9rem;
-        }
-
-        .student-info strong {
-            color: var(--primary-color);
-        }
-
-        #pdf-viewer {
-            flex: 1;
-            width: 100%;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        iframe, embed {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .alert-box {
-            background-color: #fee2e2;
-            border: 1px solid #ef4444;
-            color: #b91c1c;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        /* --- File Upload Grid (New) --- */
-        .upload-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .class-upload-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 8px;
-            background: #fafafa;
-        }
-
-        .file-drop-area {
-            border: 2px dashed var(--primary-color);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            cursor: pointer;
-            background-color: #f9fafb;
-            margin-top: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .file-drop-area:hover {
-            background-color: #edf7ed;
-        }
-
-        .status-badge {
-            display: inline-block;
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 5px;
-        }
-        .status-missing { background: #fee2e2; color: #991b1b; }
-        .status-ok { background: #dcfce7; color: #166534; }
-
-        /* --- Responsive Helper --- */
-        @media (max-width: 768px) {
-            .exam-header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-            .student-info {
-                text-align: center;
-            }
-            .upload-grid {
-                grid-template-columns: 1fr; /* Stack upload boxes on mobile */
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aplikasi Ujian - SMAS Plus Darussalam</title>
+<style>
+:root{--primary:#16a34a;--primary-dark:#15803d;--bg:#f0fff4;--text:#0f172a;--white:#fff}
+*{box-sizing:border-box;font-family:Segoe UI, Tahoma, sans-serif}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);user-select:none}
+.container{max-width:1100px;margin:30px auto;padding:20px}
+.card{background:var(--white);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.header{display:flex;gap:16px;align-items:center}
+.logo{width:84px;height:84px;border-radius:50%;overflow:hidden;border:4px solid var(--white)}
+.title{color:var(--primary);font-weight:700}
+.row{display:flex;gap:20px;margin-top:12px}
+.col{flex:1}
+input,select,textarea{width:100%;padding:10px;border:2px solid #e6f2ea;border-radius:8px}
+button{background:var(--primary);color:var(--white);border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
+button.secondary{background:transparent;color:var(--primary);border:2px solid var(--primary)}
+.small{font-size:0.9rem;color:#374151}
+.hidden{display:none}
+#pdf-viewer{width:100%;height:68vh;border:2px solid #e6f2ea;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center}
+#pdf-viewer iframe{width:100%;height:100%;border:none}
+.timer-box{background:var(--primary);color:white;padding:8px 12px;border-radius:8px;font-weight:700}
+.notice{background:#ecfccb;border:1px solid #bef264;padding:10px;border-radius:8px;margin-top:10px}
+.list{max-height:320px;overflow:auto;border:1px solid #eef2e7;padding:8px;border-radius:8px}
+.user-line{display:flex;justify-content:space-between;padding:8px;border-bottom:1px dashed #f0f3f0}
+.user-line .meta{font-size:0.85rem;color:#374151}
+.center{text-align:center}
+/* disable selection and context menu */
+body,html{ -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none }
+</style>
 </head>
 <body>
+<div class="container">
+  <div class="card header">
+    <img class="logo" src="/mnt/data/images (2).png" alt="logo sekolah"/>
+    <div>
+      <div class="title">Asesmen Sumatif Akhir Semester Ganjil SMA Plus Darussalam Lawang</div>
+      <div class="small">Selamat datang — Pastikan baca instruksi ujian sebelum memulai.</div>
+    </div>
+  </div>
 
-    <div class="container">
+  <div id="view-area">
 
-        <!-- 1. HALAMAN LOGIN SISWA -->
-        <div id="view-login" class="view active">
-            <div class="card">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1024px-User_icon_2.svg.png" alt="Logo" style="width: 60px; margin-bottom: 1rem; opacity: 0.6;">
-                <h1>Ujian Online</h1>
-                <p style="margin-bottom: 1.5rem; color: #666;">Silakan masuk untuk memulai ujian.</p>
-                
-                <form id="student-login-form" onsubmit="handleStudentLogin(event)">
-                    <div class="form-group">
-                        <label for="student-name">Nama Lengkap</label>
-                        <input type="text" id="student-name" placeholder="Masukkan nama lengkap..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="student-class">Kelas</label>
-                        <select id="student-class" required>
-                            <option value="" disabled selected>Pilih Kelas</option>
-                            <option value="X">Kelas X</option>
-                            <option value="XI">Kelas XI</option>
-                            <option value="XII_IBB">Kelas XII IBB</option>
-                            <option value="XII_IIS">Kelas XII IIS</option>
-                        </select>
-                    </div>
-                    <button type="submit">Mulai Ujian</button>
-                </form>
-
-                <div class="link-btn" onclick="switchView('view-admin-login')">Login Panitia</div>
-            </div>
+    <!-- LOGIN SISWA -->
+    <div id="view-login" class="card" style="margin-top:18px">
+      <h3>Login Siswa</h3>
+      <div class="row">
+        <div class="col">
+          <label>Nama Lengkap</label>
+          <input id="student-name" placeholder="Masukkan nama lengkap" />
         </div>
-
-        <!-- 2. HALAMAN LOGIN PANITIA -->
-        <div id="view-admin-login" class="view">
-            <div class="card">
-                <h2>Login Panitia</h2>
-                <form id="admin-login-form" onsubmit="handleAdminLogin(event)">
-                    <div class="form-group">
-                        <label for="admin-user">Username</label>
-                        <input type="text" id="admin-user" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="admin-pass">Password</label>
-                        <input type="password" id="admin-pass" required>
-                    </div>
-                    <button type="submit">Masuk</button>
-                    <button type="button" class="secondary" onclick="switchView('view-login')">Batal</button>
-                </form>
-            </div>
+        <div style="width:180px">
+          <label>Kelas</label>
+          <select id="student-class"><option value="">Pilih Kelas</option><option value="X">X</option><option value="XI">XI</option><option value="XII_IBB">XII IBB</option><option value="XII_IIS">XII IIS</option></select>
         </div>
-
-        <!-- 3. HALAMAN DASHBOARD PANITIA (Upload Soal) -->
-        <div id="view-admin-panel" class="view">
-            <div class="card admin-card">
-                <h2>Pengaturan Ujian</h2>
-                <div class="alert-box" id="upload-status" style="display: block; background-color: #e0f2fe; border-color: #0ea5e9; color: #0369a1;">
-                    Status: Silakan upload soal untuk masing-masing kelas.
-                </div>
-
-                <div class="form-group">
-                    <label style="margin-bottom: 10px;">Upload Soal (PDF) per Kelas:</label>
-                    
-                    <div class="upload-grid">
-                        <!-- Upload Kelas X -->
-                        <div class="class-upload-item">
-                            <h4>Kelas X <span id="status-X" class="status-badge status-missing">Belum Ada</span></h4>
-                            <div class="file-drop-area" onclick="document.getElementById('pdf-upload-X').click()">
-                                <span id="filename-X">Pilih PDF Kelas X</span>
-                                <input type="file" id="pdf-upload-X" accept="application/pdf" style="display: none;" onchange="handleFileSelect(this, 'X')">
-                            </div>
-                        </div>
-
-                        <!-- Upload Kelas XI -->
-                        <div class="class-upload-item">
-                            <h4>Kelas XI <span id="status-XI" class="status-badge status-missing">Belum Ada</span></h4>
-                            <div class="file-drop-area" onclick="document.getElementById('pdf-upload-XI').click()">
-                                <span id="filename-XI">Pilih PDF Kelas XI</span>
-                                <input type="file" id="pdf-upload-XI" accept="application/pdf" style="display: none;" onchange="handleFileSelect(this, 'XI')">
-                            </div>
-                        </div>
-
-                        <!-- Upload Kelas XII IBB -->
-                        <div class="class-upload-item">
-                            <h4>Kelas XII IBB <span id="status-XII_IBB" class="status-badge status-missing">Belum Ada</span></h4>
-                            <div class="file-drop-area" onclick="document.getElementById('pdf-upload-XII_IBB').click()">
-                                <span id="filename-XII_IBB">Pilih PDF XII IBB</span>
-                                <input type="file" id="pdf-upload-XII_IBB" accept="application/pdf" style="display: none;" onchange="handleFileSelect(this, 'XII_IBB')">
-                            </div>
-                        </div>
-
-                        <!-- Upload Kelas XII IIS -->
-                        <div class="class-upload-item">
-                            <h4>Kelas XII IIS <span id="status-XII_IIS" class="status-badge status-missing">Belum Ada</span></h4>
-                            <div class="file-drop-area" onclick="document.getElementById('pdf-upload-XII_IIS').click()">
-                                <span id="filename-XII_IIS">Pilih PDF XII IIS</span>
-                                <input type="file" id="pdf-upload-XII_IIS" accept="application/pdf" style="display: none;" onchange="handleFileSelect(this, 'XII_IIS')">
-                            </div>
-                        </div>
-                    </div>
-
-                    <small style="color: #666; display: block;">*File disimpan di LocalStorage. Gunakan PDF ukuran kecil (< 2MB per file) agar tidak error.</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="exam-duration">Durasi Ujian (Menit)</label>
-                    <input type="number" id="exam-duration" value="90" min="1">
-                </div>
-
-                <button onclick="saveExamSettings()">Simpan Semua Pengaturan</button>
-                <button class="secondary" onclick="switchView('view-login')">Logout</button>
-            </div>
-        </div>
-
-        <!-- 4. HALAMAN UJIAN (SISWA) -->
-        <div id="view-exam" class="view">
-            <div class="card full-screen-card">
-                <div class="exam-header">
-                    <div class="student-info">
-                        <div>Nama: <strong id="display-name">-</strong></div>
-                        <div>Kelas: <strong id="display-class">-</strong></div>
-                    </div>
-                    <div style="text-align: center;">
-                        <h3 style="margin:0; color: var(--primary-color);">LEMBAR SOAL</h3>
-                    </div>
-                    <div class="timer-box" id="timer-display">00:00:00</div>
-                </div>
-
-                <!-- Area PDF -->
-                <div id="pdf-viewer">
-                    <p>Memuat soal...</p>
-                </div>
-
-                <div style="margin-top: 1rem; font-size: 0.8rem; color: #666; display: flex; justify-content: space-between; align-items: center;">
-                    <span>⚠️ Dilarang pindah tab atau keluar dari browser.</span>
-                    <button onclick="finishExam()" style="width: auto; background-color: var(--danger); margin: 0;">Selesai Ujian</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. HALAMAN DIBLOKIR (CURANG) -->
-        <div id="view-blocked" class="view">
-            <div class="card" style="border: 2px solid var(--danger);">
-                <h2 style="color: var(--danger);">UJIAN TERKUNCI</h2>
-                <p>Anda terdeteksi melakukan kecurangan dengan meninggalkan halaman ujian lebih dari batas yang ditentukan.</p>
-                <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #ddd;">
-                <p>Silakan lapor ke pengawas ujian untuk membuka kembali akses ujian (Reset Browser).</p>
-                <button onclick="location.reload()" class="secondary" style="margin-top: 20px; color: var(--danger); border-color: var(--danger);">Kembali ke Login</button>
-            </div>
-        </div>
-
-        <!-- 6. HALAMAN SELESAI -->
-        <div id="view-finished" class="view">
-            <div class="card">
-                <h2>Ujian Selesai</h2>
-                <div style="font-size: 4rem; margin: 1rem 0;">✅</div>
-                <p>Terima kasih telah mengerjakan ujian dengan jujur.</p>
-                <p>Silakan kumpulkan Lembar Jawab Komputer (LJK) Anda ke pengawas.</p>
-                <button onclick="location.reload()">Kembali ke Halaman Utama</button>
-            </div>
-        </div>
-
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button onclick="studentLogin()">Mulai Ujian</button>
+        <button class="secondary" onclick="showAdminLogin()">Login Panitia</button>
+      </div>
+      <div class="notice">Aturan singkat: Jangan membuka tab/window baru. Jika keluar lebih dari 2 kali, ujian akan otomatis diselesaikan dan lapor ke panitia.</div>
     </div>
 
-    <script>
-        // --- KONFIGURASI & STATE ---
-        const ADMIN_USER = "admin";
-        // UPDATE PASSWORD SESUAI PERMINTAAN
-        const ADMIN_PASS = "smadalawang20517826";
-        
-        let examTimer = null;
-        let cheatCount = 0;
-        const MAX_CHEAT_ATTEMPTS = 2;
-        let remainingTime = 0;
-        const CLASSES = ['X', 'XI', 'XII_IBB', 'XII_IIS'];
+    <!-- ADMIN LOGIN -->
+    <div id="view-admin-login" class="card hidden" style="margin-top:18px">
+      <h3>Login Panitia</h3>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input id="admin-user" placeholder="Username" />
+        <input id="admin-pass" placeholder="Password" type="password" />
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px">
+        <button onclick="adminLogin()">Masuk</button>
+        <button class="secondary" onclick="backToLogin()">Batal</button>
+      </div>
+      <div class="small" style="margin-top:8px">Catatan: Untuk pengawasan realtime aktifkan Firebase (opsional). Jika tidak, admin dapat memulai ujian secara lokal (hanya mempengaruhi sesi admin & siswa yang mem-poll).</div>
+    </div>
 
-        // --- FUNGSI NAVIGASI (ROUTER) ---
-        function switchView(viewId) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-        }
+    <!-- ADMIN PANEL -->
+    <div id="view-admin-panel" class="card hidden" style="margin-top:18px">
+      <h3>Dashboard Panitia</h3>
+      <div style="display:flex;gap:12px;align-items:center">
+        <button id="btn-open" onclick="openPortal()">Buka Portal</button>
+        <button id="btn-close" class="secondary" onclick="closePortal()">Tutup Portal</button>
+        <button id="btn-start" style="background:#0ea5a0" onclick="startExamByAdmin()">Mulai Ujian (Admin)</button>
+      </div>
 
-        // --- FUNGSI LOGIN SISWA ---
-        function handleStudentLogin(e) {
-            e.preventDefault();
-            const name = document.getElementById('student-name').value;
-            const kelas = document.getElementById('student-class').value;
+      <div style="margin-top:12px;display:flex;gap:12px">
+        <div style="flex:1">
+          <label>Durasi Ujian (Menit)</label>
+          <input id="admin-duration" type="number" value="90" />
+        </div>
+        <div style="width:220px">
+          <label>Link PDF (contoh Google Drive preview)</label>
+          <input id="admin-link" placeholder="https://drive.google.com/.../preview?pli=1" />
+        </div>
+      </div>
 
-            if (name && kelas) {
-                // AMBIL SOAL SPESIFIK BERDASARKAN KELAS
-            const PDF_LINKS = {
-                "X": "https://drive.google.com/file/d/1MngweM6Y73Pc1Jyg8HiAknkTR7Qo9J7j/preview",
-                "XI": null,
-                "XII_IBB": null,
-                "XII_IIS": null
-             };
+      <div style="margin-top:10px;display:flex;gap:10px">
+        <button onclick="saveAdminSettings()">Simpan & Terapkan</button>
+        <button class="secondary" onclick="resetAll()">Reset Semua Status</button>
+      </div>
 
-            const storedPdf = PDF_LINKS[kelas];
-                const storedDuration = localStorage.getItem('examDuration');
+      <h4 style="margin-top:14px">Monitoring Siswa</h4>
+      <div class="list" id="student-list">Tidak ada data siswa (jika Firebase tidak aktif, data hanya tersimpan lokal setiap sesi)</div>
 
-                if (!storedPdf) {
-                    alert(`Soal untuk ${kelas.replace('_', ' ')} belum diupload oleh panitia. Harap lapor ke pengawas.`);
-                    return;
-                }
+      <div style="margin-top:12px"><small>Ket: Jika ingin monitoring realtime antar device, hubungkan Firebase pada konfigurasi di script (lihat komentar kode).</small></div>
+    </div>
 
-                // Simpan sesi siswa
-                sessionStorage.setItem('studentName', name);
-                sessionStorage.setItem('studentClass', kelas);
-                
-                // Setup Tampilan Ujian
-                document.getElementById('display-name').textContent = name;
-                document.getElementById('display-class').textContent = kelas.replace('_', ' ');
+    <!-- HALAMAN UJIAN -->
+    <div id="view-exam" class="card hidden" style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><strong id="exam-student"></strong><div class="small" id="exam-class"></div></div>
+        <div style="display:flex;gap:10px;align-items:center"><div class="timer-box" id="timer-display">00:00:00</div></div>
+      </div>
+      <div id="pdf-viewer" style="margin-top:12px"><!-- iframe atau pesan akan dimasukkan --></div>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:space-between;align-items:center">
+        <div class="small">⚠️ Dilarang membuka tab/window baru. Klik kanan dan copy dinonaktifkan.</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="finishExam(true)" class="secondary">Selesai (Kirim)</button>
+        </div>
+      </div>
+    </div>
 
-                // Masukkan PDF ke viewer
-                const viewer = document.getElementById('pdf-viewer');
-                viewer.innerHTML = `<iframe src="${storedPdf}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="100%"></iframe>`;
+    <!-- HALAMAN TERSELESAI -->
+    <div id="view-finished" class="card hidden center" style="margin-top:18px">
+      <h2>Ujian Selesai</h2>
+      <div style="font-size:3rem; margin:12px 0">✅</div>
+      <p id="finished-text">Terimakasih telah menyelesaikan ujian ini. Semoga diberikan hasil yang terbaik</p>
+      <button onclick="location.reload()">Kembali</button>
+    </div>
 
-                // Pindah View
-                switchView('view-exam');
-                requestFullScreen();
-                startExamTimer(storedDuration ? parseInt(storedDuration) : 90);
-                activateSecurity();
-            }
-        }
+  </div>
+</div>
 
-        // --- FUNGSI LOGIN ADMIN ---
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const user = document.getElementById('admin-user').value;
-            const pass = document.getElementById('admin-pass').value;
+<script>
+// ------------------------
+// CONFIG
+// ------------------------
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'smadalawang20517826';
+// If you want realtime monitoring across devices, paste your Firebase config here
+const FIREBASE_CONFIG = null; // <-- replace null with your firebase config object to enable realtime monitoring
 
-            if (user === ADMIN_USER && pass === ADMIN_PASS) {
-                switchView('view-admin-panel');
-                checkExistingSettings();
-            } else {
-                alert("Username atau Password salah!");
-            }
-        }
+// ------------------------
+// State & util
+// ------------------------
+let examTimer = null;
+let remaining = 0;
+const MAX_CHEAT = 2; // jika melanggar >2 akan otomatis selesai
 
-        // --- LOGIKA ADMIN (UPLOAD PDF) ---
-        function handleFileSelect(input, classCode) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                if(file.type !== 'application/pdf') {
-                    alert("Hanya file PDF yang diperbolehkan!");
-                    input.value = ''; 
-                    return;
-                }
-                document.getElementById('filename-' + classCode).textContent = file.name;
-            }
-        }
+function hideAllViews(){ document.querySelectorAll('#view-area > .card').forEach(c=>c.classList.add('hidden')) }
+function backToLogin(){ hideAllViews(); document.getElementById('view-login').classList.remove('hidden') }
+function showAdminLogin(){ hideAllViews(); document.getElementById('view-admin-login').classList.remove('hidden') }
 
-        function saveExamSettings() {
-            const duration = document.getElementById('exam-duration').value;
-            localStorage.setItem('examDuration', duration);
+// ------------------------
+// Admin: open/close portal, start exam, save settings
+// ------------------------
+function openPortal(){ localStorage.setItem('portalOpen','1'); alert('Portal dibuka'); updateStudentList(); }
+function closePortal(){ localStorage.removeItem('portalOpen'); alert('Portal ditutup'); updateStudentList(); }
 
-            let filesProcessed = 0;
-            let errors = 0;
+function saveAdminSettings(){
+  const link = document.getElementById('admin-link').value.trim();
+  const dur = parseInt(document.getElementById('admin-duration').value)||90;
+  localStorage.setItem('examLink', link);
+  localStorage.setItem('examDuration', dur);
+  alert('Pengaturan disimpan');
+}
 
-            // Loop setiap kelas untuk menyimpan file jika ada upload baru
-            CLASSES.forEach(classCode => {
-                const input = document.getElementById('pdf-upload-' + classCode);
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        try {
-                            localStorage.setItem('examPdf_' + classCode, e.target.result);
-                            updateStatusUI(classCode, true);
-                        } catch (err) {
-                            console.error(err);
-                            alert(`Gagal menyimpan soal Kelas ${classCode}. File terlalu besar!`);
-                            errors++;
-                        }
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                }
-            });
+function startExamByAdmin(){
+  const dur = parseInt(localStorage.getItem('examDuration')||90);
+  const startTime = Date.now();
+  localStorage.setItem('examStartedAt', startTime);
+  localStorage.setItem('examDuration', dur);
+  // flag untuk siswa agar bisa mulai
+  localStorage.setItem('examActive','1');
+  alert('Ujian dimulai oleh admin — semua siswa yang masuk dapat memulai.');
+}
 
-            // Beri jeda sedikit untuk update UI
-            setTimeout(() => {
-                if(errors === 0) {
-                    alert("Pengaturan dan Soal berhasil disimpan!");
-                }
-                checkExistingSettings();
-            }, 500);
-        }
+function resetAll(){
+  if(confirm('Reset semua data lokal? (Hanya untuk sesi ini)')){
+    // bukan hapus file, hanya status
+    localStorage.removeItem('examStartedAt');
+    localStorage.removeItem('examActive');
+    localStorage.removeItem('studentStatusList');
+    alert('Status direset'); updateStudentList();
+  }
+}
 
-        function checkExistingSettings() {
-            // Cek ketersediaan soal untuk setiap kelas
-            CLASSES.forEach(classCode => {
-                const hasFile = localStorage.getItem('examPdf_' + classCode) !== null;
-                updateStatusUI(classCode, hasFile);
-            });
-        }
+function adminLogin(){
+  const u = document.getElementById('admin-user').value;
+  const p = document.getElementById('admin-pass').value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){ hideAllViews(); document.getElementById('view-admin-panel').classList.remove('hidden'); updateStudentList(); loadAdminInputs(); }
+  else alert('Username / password salah');
+}
 
-        function updateStatusUI(classCode, exists) {
-            const badge = document.getElementById('status-' + classCode);
-            const filenameSpan = document.getElementById('filename-' + classCode);
-            
-            if (exists) {
-                badge.className = "status-badge status-ok";
-                badge.textContent = "Sudah Ada";
-                if(filenameSpan.textContent.includes("Pilih PDF")) {
-                    filenameSpan.textContent = "File tersimpan (Upload baru untuk ganti)";
-                }
-            } else {
-                badge.className = "status-badge status-missing";
-                badge.textContent = "Belum Ada";
-            }
-        }
+function loadAdminInputs(){ document.getElementById('admin-link').value = localStorage.getItem('examLink')||''; document.getElementById('admin-duration').value = localStorage.getItem('examDuration')||90 }
 
-        // --- LOGIKA TIMER ---
-        function startExamTimer(minutes) {
-            remainingTime = minutes * 60;
-            updateTimerDisplay();
+// ------------------------
+// Student login & session
+// ------------------------
+function studentLogin(){
+  const name = document.getElementById('student-name').value.trim();
+  const kelas = document.getElementById('student-class').value;
+  if(!name||!kelas){ alert('Lengkapi nama dan kelas'); return }
 
-            examTimer = setInterval(() => {
-                remainingTime--;
-                updateTimerDisplay();
+  // check portal open
+  if(!localStorage.getItem('portalOpen')){ alert('Portal ujian belum dibuka oleh panitia. Harap menunggu.'); return }
 
-                if (remainingTime <= 0) {
-                    clearInterval(examTimer);
-                    finishExam(true);
-                }
-            }, 1000);
-        }
+  // save session
+  sessionStorage.setItem('stu_name',name);
+  sessionStorage.setItem('stu_class',kelas);
+  sessionStorage.setItem('cheatCount','0');
+  sessionStorage.setItem('stu_status','entered');
 
-        function updateTimerDisplay() {
-            const hours = Math.floor(remainingTime / 3600);
-            const minutes = Math.floor((remainingTime % 3600) / 60);
-            const seconds = remainingTime % 60;
-            document.getElementById('timer-display').textContent = 
-                `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-        }
+  // register student to list (local mode)
+  registerStudentLocal(name,kelas);
 
-        function pad(num) { return num.toString().padStart(2, '0'); }
+  startStudentExamUI();
+}
 
-        // --- LOGIKA ANTI-CHEATING ---
-        function activateSecurity() {
-            cheatCount = 0;
-            document.addEventListener('contextmenu', event => event.preventDefault());
-            document.onkeydown = function(e) {
-                if(e.keyCode == 123) return false; 
-                if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
-                if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-            }
-            window.onblur = function() {
-                if(document.getElementById('view-exam').classList.contains('active')) {
-                    cheatCount++;
-                    if (cheatCount > MAX_CHEAT_ATTEMPTS) lockExam();
-                    else alert(`PERINGATAN! Jangan keluar dari halaman ujian. (${cheatCount}/${MAX_CHEAT_ATTEMPTS})`);
-                }
-            };
-        }
+function registerStudentLocal(name,kelas){
+  let list = JSON.parse(localStorage.getItem('studentStatusList')||'[]');
+  const id = name+'|'+kelas+'|'+Date.now();
+  list = list.filter(i=>!i.startsWith(name+'|'+kelas+'|')); // replace existing for same name+kelas
+  list.push(id+'::entered');
+  localStorage.setItem('studentStatusList',JSON.stringify(list));
+  updateStudentList();
+}
 
-        function lockExam() {
-            clearInterval(examTimer);
-            switchView('view-blocked');
-            exitFullScreen();
-        }
+function updateStudentList(){
+  const el = document.getElementById('student-list');
+  const arr = JSON.parse(localStorage.getItem('studentStatusList')||'[]');
+  if(arr.length===0){ el.innerHTML='Belum ada siswa terdaftar'; return }
+  const lines = arr.map(s=>{
+    const [id,status]=s.split('::');
+    const parts = id.split('|');
+    return `<div class="user-line"><div><strong>${parts[0]}</strong><div class="meta">${parts[1]}</div></div><div><span class="meta">${status}</span></div></div>`
+  }).join('');
+  el.innerHTML = lines;
+}
 
-        function finishExam(auto = false) {
-            if(!auto) {
-                if(!confirm("Yakin ingin mengakhiri ujian?")) return;
-            }
-            clearInterval(examTimer);
-            switchView('view-finished');
-            exitFullScreen();
-            sessionStorage.clear();
-        }
+// ------------------------
+// Exam UI for student
+// ------------------------
+function startStudentExamUI(){
+  hideAllViews(); document.getElementById('view-exam').classList.remove('hidden');
+  const name = sessionStorage.getItem('stu_name');
+  const kelas = sessionStorage.getItem('stu_class');
+  document.getElementById('exam-student').innerText = name;
+  document.getElementById('exam-class').innerText = kelas;
 
-        // --- FULLSCREEN UTILITIES ---
-        function requestFullScreen() {
-            const el = document.documentElement;
-            if (el.requestFullscreen) el.requestFullscreen();
-            else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
-            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-            else if (el.msRequestFullscreen) el.msRequestFullscreen();
-        }
-        function exitFullScreen() {
-            if (document.exitFullscreen) document.exitFullscreen();
-        }
-    </script>
+  const link = localStorage.getItem('examLink');
+  if(!link){ alert('Soal belum diinput admin'); backToLogin(); return }
+
+  // set timer based on admin's start time if exists, else local start
+  const dur = parseInt(localStorage.getItem('examDuration')||90);
+  const startedAt = parseInt(localStorage.getItem('examStartedAt')||Date.now());
+  const elapsed = Math.floor((Date.now() - startedAt)/1000);
+  remaining = dur*60 - elapsed;
+  if(remaining<=0){ alert('Waktu ujian sudah berakhir'); finishExam(true); return }
+
+  startTimer();
+
+  // show PDF in iframe (Drive preview recommended)
+  document.getElementById('pdf-viewer').innerHTML = `<iframe src="${link}"></iframe>`;
+
+  // enable anti-cheat listeners
+  activateSecurityListeners();
+}
+
+function startTimer(){
+  updateTimerDisplay();
+  examTimer = setInterval(()=>{ remaining--; if(remaining<=0){ clearInterval(examTimer); finishExam(true) } updateTimerDisplay() },1000)
+}
+function updateTimerDisplay(){
+  const h=Math.floor(remaining/3600); const m=Math.floor((remaining%3600)/60); const s=remaining%60;
+  document.getElementById('timer-display').innerText = `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+function pad(n){return n.toString().padStart(2,'0')}
+
+// ------------------------
+// Anti-cheating
+// ------------------------
+function activateSecurityListeners(){
+  // disable right click/context
+  document.addEventListener('contextmenu',e=>e.preventDefault());
+  // disable copy
+  document.addEventListener('copy',e=>e.preventDefault());
+  // disable common devtools keys
+  document.onkeydown = function(e){
+    if(e.keyCode==123) return false; // F12
+    if(e.ctrlKey && e.shiftKey && (e.keyCode==73 || e.keyCode==74)) return false; // Ctrl+Shift+I/J
+    if(e.ctrlKey && e.keyCode==85) return false; // Ctrl+U
+  }
+  // detect leaving tab/window
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden) handleCheatEvent('tab-hidden')
+  })
+  window.addEventListener('blur', ()=>{ handleCheatEvent('blur') })
+}
+
+function handleCheatEvent(type){
+  let count = parseInt(sessionStorage.getItem('cheatCount')||'0');
+  count++;
+  sessionStorage.setItem('cheatCount',count);
+  // update local studentStatusList
+  markStudentStatus(sessionStorage.getItem('stu_name'),sessionStorage.getItem('stu_class'), count>MAX_CHEAT? 'cheated' : `warning(${count})`);
+  if(count>MAX_CHEAT){
+    alert('Anda terdeteksi melanggar aturan. Ujian akan otomatis diselesaikan. Hubungi panitia.');
+    finishExam(true,true);
+  } else {
+    alert(`PERINGATAN! Jangan tinggalkan halaman ujian. (${count}/${MAX_CHEAT})`)
+  }
+}
+
+function markStudentStatus(name,kelas,status){
+  let arr = JSON.parse(localStorage.getItem('studentStatusList')||'[]');
+  // find and update
+  arr = arr.map(s=>{
+    const [id,st]=s.split('::');
+    if(id.startsWith(name+'|'+kelas+'|')) return id+'::'+status; else return s;
+  });
+  localStorage.setItem('studentStatusList',JSON.stringify(arr)); updateStudentList();
+}
+
+// ------------------------
+// Finish exam
+// ------------------------
+function finishExam(force=false,cheated=false){
+  clearInterval(examTimer);
+  const name = sessionStorage.getItem('stu_name'); const kelas = sessionStorage.getItem('stu_class');
+  // mark finished
+  markStudentStatus(name,kelas, cheated? 'cheated' : 'finished');
+  // show finished page
+  hideAllViews(); document.getElementById('view-finished').classList.remove('hidden');
+  sessionStorage.clear();
+}
+
+// ------------------------
+// utilities
+// ------------------------
+function backToLogin(){ hideAllViews(); document.getElementById('view-login').classList.remove('hidden') }
+
+// initialize
+(function init(){ backToLogin(); updateStudentList(); })();
+
+</script>
 </body>
-
 </html>
-
-
